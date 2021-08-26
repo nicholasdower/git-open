@@ -1,0 +1,37 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+
+parser = OptionParser.new do |opts|
+  opts.banner = <<~EOF
+    Opens the current branch on github.com.
+
+    To install, add this script to your PATH, then run one of the following:
+
+        git config --global alias.open '!git-open' # All repos
+        git config alias.open '!git-open'          # Current repo only
+
+    Usage: git open
+
+    Options:
+  EOF
+
+  opts.on('-h', "Print this message (Don't use --help).") do
+    puts opts
+    exit
+  end
+end
+
+parser.parse!
+
+repo_path = `git config --get remote.origin.url`.strip
+
+unless $?.success? && repo_path.match?(/^git@github[.]com:[^\/]+\/.*[.]git$/)
+  fail('fatal: repo path')
+end
+
+repo_path = repo_path.gsub(/^git@github[.]com:([^\/]+\/.*)[.]git$/, '\1')
+
+branch = `git branch --show-current`.strip
+
+system "open https://github.com/#{repo_path}/compare/#{branch}#files_bucket"
